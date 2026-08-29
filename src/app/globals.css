@@ -1,0 +1,412 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f3f4f6;
+  --panel: #ffffff;
+  --border: #c9ced6;
+  --text: #1f2933;
+  --muted: #61707d;
+  --accent: #2f5d8a;
+  --danger: #9b2c2c;
+  --row-hover: #eef2f6;
+  --selected: #e8eef5;
+  --banner: #eef6ee;
+  --banner-error: #f8ecec;
+  --font: "IBM Plex Sans", "Segoe UI", Tahoma, sans-serif;
+  --table-row-height: 41px;
+  --table-filter-offset: 37px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+a {
+  color: var(--accent);
+}
+
+.table-app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+.header-actions,
+.toolbar,
+.bulk-actions,
+.pager,
+.column-checks,
+.range {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.toolbar {
+  margin-bottom: 12px;
+}
+
+.page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.table-wrap.is-refreshing {
+  opacity: 0.72;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+}
+
+.inline-error {
+  margin: 8px 0 0;
+  color: var(--danger);
+}
+
+.input {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 2px;
+  padding: 7px 9px;
+  font: inherit;
+}
+
+.input.compact {
+  width: 100%;
+  min-width: 0;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.input.search {
+  flex: 1;
+  min-width: 220px;
+}
+
+.btn {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 2px;
+  padding: 7px 11px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--row-hover);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn.danger {
+  border-color: #d6a0a0;
+  color: var(--danger);
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: #274e74;
+}
+
+.linkish {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
+.panel,
+.bulk-bar,
+.banner {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.banner {
+  background: var(--banner);
+}
+
+.banner-error {
+  background: var(--banner-error);
+  color: var(--danger);
+}
+
+.bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+}
+
+.hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.check {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.table-wrap {
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.table-scroll {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+  table-layout: fixed;
+}
+
+.data-table th,
+.data-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.data-table thead th {
+  background: #edf0f3;
+  font-weight: 600;
+  user-select: none;
+  position: sticky;
+  z-index: 2;
+}
+
+.data-table thead tr:first-child th {
+  top: 0;
+}
+
+.data-table thead tr.filter-row th {
+  top: var(--table-filter-offset);
+  background: #f7f8fa;
+  font-weight: 400;
+}
+
+.filter-row th {
+  background: #f7f8fa;
+  font-weight: 400;
+}
+
+.data-table tbody tr:hover {
+  background: var(--row-hover);
+}
+
+.data-table tbody tr.selected {
+  background: var(--selected);
+}
+
+.data-table tbody tr.virtual-spacer td {
+  background: transparent;
+}
+
+.check-col {
+  width: 36px;
+}
+
+.sort-btn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.state {
+  text-align: center;
+  padding: 28px 12px !important;
+  color: var(--muted);
+}
+
+.state.error {
+  color: var(--danger);
+}
+
+.pager {
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.range {
+  gap: 4px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 28, 36, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 40;
+}
+
+.modal {
+  width: min(560px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.item-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 14px;
+}
+
+.item-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.item-form label.full {
+  grid-column: 1 / -1;
+}
+
+.item-form textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.form-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--danger);
+}
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.confirm-body {
+  padding: 14px;
+}
+
+.confirm-body p {
+  margin: 0 0 16px;
+}
+
+.login-page {
+  max-width: 420px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+@media (max-width: 720px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .item-form {
+    grid-template-columns: 1fr;
+  }
+}
