@@ -1,6 +1,6 @@
 # next-items
 
-Next.js inventory UI for the [`pymongo-items`](../pymongo-items) FastAPI backend.
+Next.js inventory UI for the [`pymongo-items`](https://github.com/chandan632/pymongo-items) FastAPI backend.
 
 ## Included
 
@@ -50,14 +50,15 @@ next-items/
 
 ## Quick start
 
-Requirements: Node.js 20.9+, `pymongo-items` running on port 8000 with an admin user.
+Requirements: Node.js 20.9+, [`pymongo-items`](https://github.com/chandan632/pymongo-items) running on port 8000 with an admin user.
 
-Full stack (Mongo/Redis + API + this UI): see **Fresh local run** in [`pymongo-items/README.md`](../pymongo-items/README.md).
+Full stack (Mongo/Redis + API + this UI): see **Fresh local run** in the [`pymongo-items` README](https://github.com/chandan632/pymongo-items#fresh-local-run-api--ui).
 
 UI only (API already up):
 
 ```bash
-cd /home/chandan/workspace/Items/next-items
+git clone https://github.com/chandan632/next-items.git
+cd next-items
 cp --update=none .env.example .env.local
 npm ci
 npm run dev
@@ -139,4 +140,4 @@ docker run --rm -p 3000:3000 next-items
 
 ## Backend
 
-Use the **Fresh local run** section in [`pymongo-items`](../pymongo-items/README.md), then open this app.
+Use the **Fresh local run** section in [`pymongo-items`](https://github.com/chandan632/pymongo-items#fresh-local-run-api--ui), then open this app.
