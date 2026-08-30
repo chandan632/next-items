@@ -13,7 +13,7 @@ export type RangeDraft = {
 type FilterProps = {
   query: ItemQuery;
   rangeDraft: RangeDraft;
-  setQuery: (patch: Partial<ItemQuery>, options?: { resetPage?: boolean }) => void;
+  setQuery: (patch: Partial<ItemQuery>, options?: { resetCursor?: boolean }) => void;
   updateRange: (field: keyof RangeDraft, value: string) => void;
 };
 
@@ -22,7 +22,7 @@ function CategoryFilter({ query, setQuery }: FilterProps) {
     <select
       className="input compact"
       value={query.category}
-      onChange={(e) => setQuery({ category: e.target.value }, { resetPage: true })}
+      onChange={(e) => setQuery({ category: e.target.value }, { resetCursor: true })}
       aria-label="Filter category"
     >
       <option value="">All</option>
@@ -40,7 +40,7 @@ function StatusFilter({ query, setQuery }: FilterProps) {
     <select
       className="input compact"
       value={query.status}
-      onChange={(e) => setQuery({ status: e.target.value }, { resetPage: true })}
+      onChange={(e) => setQuery({ status: e.target.value }, { resetCursor: true })}
       aria-label="Filter status"
     >
       <option value="">All</option>

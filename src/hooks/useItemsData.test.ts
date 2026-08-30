@@ -35,7 +35,7 @@ const samplePage: ItemListResponse = {
       updated_at: "2024-01-01T00:00:00Z",
     },
   ],
-  meta: { page: 1, page_size: 10, total: 1, total_pages: 1 },
+  meta: { page_size: 10, total: 1, has_more: false, next_cursor: null },
 };
 
 describe("useItemsData", () => {

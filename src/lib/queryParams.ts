@@ -2,7 +2,7 @@ import { CATEGORIES, COLUMNS, PAGE_SIZE_OPTIONS, STATUSES } from "@/lib/columns"
 import type { ItemQuery } from "@/lib/types";
 
 export const QUERY_DEFAULTS: ItemQuery = {
-  page: 1,
+  cursor: "",
   page_size: 10,
   sort_by: "created_at",
   sort_order: "desc",
@@ -45,7 +45,7 @@ export function parseQueryParams(params: URLSearchParams): ItemQuery {
   const status = params.get("status") ?? "";
 
   return {
-    page: Math.max(1, Number(params.get("page") ?? QUERY_DEFAULTS.page) || 1),
+    cursor: params.get("cursor") ?? QUERY_DEFAULTS.cursor,
     page_size: snapPageSize(rawSize),
     sort_by: SORTABLE.has(sortBy as never) ? sortBy : QUERY_DEFAULTS.sort_by,
     sort_order: params.get("sort_order") === "asc" ? "asc" : "desc",

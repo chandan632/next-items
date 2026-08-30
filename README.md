@@ -84,9 +84,9 @@ App: http://localhost:3000 — login `admin@example.com` / `AdminPass123` (or th
 
 ## URL state
 
-Synced query params: `page`, `page_size`, `sort_by`, `sort_order`, `q`, `category`, `status`, `min_price`, `max_price`, `min_quantity`, `max_quantity`.
+Synced query params: `cursor`, `page_size`, `sort_by`, `sort_order`, `q`, `category`, `status`, `min_price`, `max_price`, `min_quantity`, `max_quantity`.
 
-Example: `/?q=lamp&status=active&sort_by=price&sort_order=asc&page=2`
+Example: `/?q=lamp&status=active&sort_by=price&sort_order=asc&cursor=...`
 
 ## Scripts
 

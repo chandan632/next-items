@@ -36,20 +36,20 @@ export type Item = {
   updated_at: string;
 };
 
-export type PaginationMeta = {
-  page: number;
+export type CursorPaginationMeta = {
   page_size: number;
   total: number;
-  total_pages: number;
+  has_more: boolean;
+  next_cursor: string | null;
 };
 
 export type ItemListResponse = {
   data: Item[];
-  meta: PaginationMeta;
+  meta: CursorPaginationMeta;
 };
 
 export type ItemQuery = {
-  page: number;
+  cursor: string;
   page_size: number;
   sort_by: string;
   sort_order: "asc" | "desc";

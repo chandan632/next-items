@@ -13,7 +13,7 @@ type ItemsTableHeaderProps = {
   visibleColumns: ColumnId[];
   query: ItemQuery;
   rangeDraft: RangeDraft;
-  setQuery: (patch: Partial<ItemQuery>, options?: { resetPage?: boolean }) => void;
+  setQuery: (patch: Partial<ItemQuery>, options?: { resetCursor?: boolean }) => void;
   updateRange: (field: keyof RangeDraft, value: string) => void;
   allPageSelected: boolean;
   somePageSelected: boolean;

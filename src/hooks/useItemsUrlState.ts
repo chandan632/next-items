@@ -29,7 +29,7 @@ export function filterKey(query: ItemQuery): string {
 
 export function queryKey(query: ItemQuery): string {
   return [
-    query.page,
+    query.cursor,
     query.page_size,
     query.sort_by,
     query.sort_order,
@@ -64,12 +64,12 @@ export function useItemsUrlState() {
   const query = useMemo(() => readQuery(searchParams), [searchParams]);
 
   const setQuery = useCallback(
-    (patch: Partial<ItemQuery>, options?: { resetPage?: boolean }) => {
+    (patch: Partial<ItemQuery>, options?: { resetCursor?: boolean }) => {
       const current = readQuery(searchParams);
       const next: ItemQuery = {
         ...current,
         ...patch,
-        page: options?.resetPage ? 1 : (patch.page ?? current.page),
+        cursor: options?.resetCursor ? "" : (patch.cursor ?? current.cursor),
       };
       const qs = toSearchParams(next);
       const href = qs ? `${pathname}?${qs}` : pathname;

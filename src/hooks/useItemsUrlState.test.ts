@@ -19,11 +19,11 @@ describe("readQuery", () => {
 });
 
 describe("filterKey", () => {
-  it("changes when filters change but not page alone", () => {
-    const base = readQuery(new URLSearchParams("page=1&status=active"));
-    const nextPage = readQuery(new URLSearchParams("page=2&status=active"));
-    const nextStatus = readQuery(new URLSearchParams("page=1&status=draft"));
-    expect(filterKey(base)).toBe(filterKey(nextPage));
+  it("changes when filters change but not cursor alone", () => {
+    const base = readQuery(new URLSearchParams("cursor=abc&status=active"));
+    const nextCursor = readQuery(new URLSearchParams("cursor=def&status=active"));
+    const nextStatus = readQuery(new URLSearchParams("cursor=abc&status=draft"));
+    expect(filterKey(base)).toBe(filterKey(nextCursor));
     expect(filterKey(base)).not.toBe(filterKey(nextStatus));
   });
 });

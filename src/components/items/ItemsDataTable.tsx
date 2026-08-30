@@ -15,6 +15,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Toast } from "@/components/ui/Toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useColumnPrefs } from "@/hooks/useColumnPrefs";
+import { useCursorPagination } from "@/hooks/useCursorPagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useItemSelection } from "@/hooks/useItemSelection";
 import { useItemsData } from "@/hooks/useItemsData";
@@ -43,6 +44,12 @@ export function ItemsDataTable() {
   const { user, canEdit, canAdmin, logout } = useAuth();
   const { query, setQuery } = useItemsUrlState();
   const { data, error, initialLoading, refreshing, reload } = useItemsData(query);
+  const currentFilterKey = filterKey(query);
+  const { hasPrev, goNext, goPrev, resetStack } = useCursorPagination(
+    query,
+    setQuery,
+    currentFilterKey,
+  );
   const selection = useItemSelection();
   const columns = useColumnPrefs();
 
@@ -73,7 +80,7 @@ export function ItemsDataTable() {
 
   useEffect(() => {
     if (debouncedSearch !== queryRef.current.q) {
-      setQuery({ q: debouncedSearch }, { resetPage: true });
+      setQuery({ q: debouncedSearch }, { resetCursor: true });
     }
   }, [debouncedSearch, setQuery]);
 
@@ -105,7 +112,7 @@ export function ItemsDataTable() {
         min_quantity: debouncedRange.min_quantity,
         max_quantity: debouncedRange.max_quantity,
       },
-      { resetPage: true },
+      { resetCursor: true },
     );
   }, [debouncedRange, setQuery]);
 
@@ -130,14 +137,13 @@ export function ItemsDataTable() {
     pageIds.some((id) => selection.isSelected(id)) && !allPageSelected;
   const selectedCount = selection.selectedCount(data?.meta.total ?? 0);
   const selectAllMatching = selection.mode === "exclude";
-  const totalPages = data?.meta.total_pages ?? 0;
-  const page = data?.meta.page ?? query.page;
+  const hasMore = data?.meta.has_more ?? false;
   const showEmpty = !initialLoading && !error && data?.data.length === 0;
   const showRows = !initialLoading && !error && (data?.data.length ?? 0) > 0;
   const rows = data?.data ?? [];
   const { scrollRef, range, rowHeight, viewportStyle } = useVirtualWindow(
     rows.length,
-    `${query.page}-${query.page_size}-${filterKey(query)}-${rows.length}`,
+    `${query.cursor}-${query.page_size}-${currentFilterKey}-${rows.length}`,
   );
   const visibleRows = showRows ? rows.slice(range.start, range.end) : [];
   const colSpan = columns.visibleColumns.length + (canEdit ? 2 : 1);
@@ -285,7 +291,7 @@ export function ItemsDataTable() {
       setQuery({ sort_order: query.sort_order === "asc" ? "desc" : "asc" });
       return;
     }
-    setQuery({ sort_by: columnId, sort_order: "asc" }, { resetPage: true });
+    setQuery({ sort_by: columnId, sort_order: "asc" }, { resetCursor: true });
   }
 
   function resetFilters() {
@@ -306,9 +312,10 @@ export function ItemsDataTable() {
       max_quantity: "",
       sort_by: "created_at",
       sort_order: "desc",
-      page: 1,
+      cursor: "",
       page_size: query.page_size,
     });
+    resetStack();
     selection.clear();
   }
 
@@ -342,7 +349,7 @@ export function ItemsDataTable() {
         searchInput={searchInput}
         onSearchChange={setSearchInput}
         pageSize={query.page_size}
-        onPageSizeChange={(size) => setQuery({ page_size: size }, { resetPage: true })}
+        onPageSizeChange={(size) => setQuery({ page_size: size }, { resetCursor: true })}
         onReset={resetFilters}
         onRefresh={reload}
         refreshing={refreshing}
@@ -476,11 +483,13 @@ export function ItemsDataTable() {
       )}
 
       <Pager
-        page={page}
-        totalPages={totalPages}
+        total={data?.meta.total ?? 0}
+        pageSize={query.page_size}
+        hasPrev={hasPrev}
+        hasMore={hasMore}
         disabled={initialLoading || refreshing}
-        onPrev={() => setQuery({ page: page - 1 })}
-        onNext={() => setQuery({ page: page + 1 })}
+        onPrev={goPrev}
+        onNext={() => goNext(data?.meta.next_cursor ?? null)}
       />
 
       <ItemFormModal

@@ -1,31 +1,42 @@
 "use client";
 
 type PagerProps = {
-  page: number;
-  totalPages: number;
+  total: number;
+  pageSize: number;
+  hasPrev: boolean;
+  hasMore: boolean;
   disabled: boolean;
   onPrev: () => void;
   onNext: () => void;
 };
 
-export function Pager({ page, totalPages, disabled, onPrev, onNext }: PagerProps) {
+export function Pager({
+  total,
+  pageSize,
+  hasPrev,
+  hasMore,
+  disabled,
+  onPrev,
+  onNext,
+}: PagerProps) {
   return (
     <footer className="pager">
       <button
         type="button"
         className="btn"
-        disabled={disabled || page <= 1}
+        disabled={disabled || !hasPrev}
         onClick={onPrev}
       >
         Previous
       </button>
       <span className="muted">
-        Page {totalPages === 0 ? 0 : page} of {totalPages}
+        {total === 0 ? "No items" : `${total.toLocaleString()} total`}
+        {total > 0 ? ` · showing up to ${pageSize}` : ""}
       </span>
       <button
         type="button"
         className="btn"
-        disabled={disabled || totalPages === 0 || page >= totalPages}
+        disabled={disabled || !hasMore}
         onClick={onNext}
       >
         Next
