@@ -28,7 +28,8 @@ export class ApiError extends Error {
 
 type AuthBindings = {
   getAccessToken: () => string | null;
-  setSession: (token: string, user: AuthUser) => void;
+  getCsrfToken: () => string | null;
+  setSession: (token: string, user: AuthUser, csrfToken?: string | null) => void;
   clearSession: () => void;
 };
 
@@ -42,18 +43,52 @@ type ApiEnvelope<T> = {
 
 let auth: AuthBindings = {
   getAccessToken: () => null,
+  getCsrfToken: () => null,
   setSession: () => {},
   clearSession: () => {},
 };
 
-let refreshInFlight: Promise<boolean> | null = null;
+let csrfTokenRef: string | null = null;
+
+let refreshInFlight: Promise<TokenResponse | null> | null = null;
+
+const CSRF_STORAGE_KEY = "items_csrf_token";
+
+function readStoredCsrf(): string | null {
+  if (typeof sessionStorage === "undefined") return null;
+  try {
+    return sessionStorage.getItem(CSRF_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredCsrf(token: string | null) {
+  if (typeof sessionStorage === "undefined") return;
+  try {
+    if (token) sessionStorage.setItem(CSRF_STORAGE_KEY, token);
+    else sessionStorage.removeItem(CSRF_STORAGE_KEY);
+  } catch {
+    // ignore quota / private mode
+  }
+}
 
 export function bindAuth(bindings: AuthBindings) {
   auth = bindings;
+  csrfTokenRef = bindings.getCsrfToken() ?? readStoredCsrf();
 }
 
 export function peekAccessToken() {
   return auth.getAccessToken();
+}
+
+export function peekCsrfToken() {
+  return csrfTokenRef ?? auth.getCsrfToken() ?? readStoredCsrf();
+}
+
+function setCsrfToken(token: string | null) {
+  csrfTokenRef = token;
+  writeStoredCsrf(token);
 }
 
 function apiBase() {
@@ -84,7 +119,7 @@ function readCookie(name: string): string | null {
 }
 
 function withCsrf(headers: Headers) {
-  const token = readCookie(getCsrfCookieName());
+  const token = peekCsrfToken() ?? readCookie(getCsrfCookieName());
   if (token && !headers.has(getCsrfHeaderName())) {
     headers.set(getCsrfHeaderName(), token);
   }
@@ -131,7 +166,7 @@ function isAuthPath(path: string) {
   return path.startsWith(login) || path.startsWith(refresh);
 }
 
-async function tryRefresh(): Promise<boolean> {
+async function performRefresh(): Promise<TokenResponse | null> {
   if (refreshInFlight) return refreshInFlight;
 
   refreshInFlight = (async () => {
@@ -144,19 +179,34 @@ async function tryRefresh(): Promise<boolean> {
         cache: "no-store",
         headers,
       });
-      if (!response.ok) return false;
+      if (!response.ok) return null;
       const raw = await response.json();
       const data = unwrapBody<TokenResponse>(raw);
-      auth.setSession(data.access_token, data.user);
-      return true;
+      auth.setSession(data.access_token, data.user, data.csrf_token ?? null);
+      if (data.csrf_token) setCsrfToken(data.csrf_token);
+      return data;
     } catch {
-      return false;
+      return null;
     } finally {
       refreshInFlight = null;
     }
   })();
 
   return refreshInFlight;
+}
+
+export async function refreshAccessSession(): Promise<TokenResponse> {
+  const data = await performRefresh();
+  if (!data) {
+    throw new ApiError("Session expired. Please sign in again.", 401, {
+      code: "UNAUTHORIZED",
+    });
+  }
+  return data;
+}
+
+async function tryRefresh(): Promise<boolean> {
+  return (await performRefresh()) !== null;
 }
 
 function redirectToLogin() {
@@ -205,11 +255,38 @@ export async function apiFetch(
     !options?.skipAuthRetry &&
     !isAuthPath(pathForAuthCheck)
   ) {
+    let forceLogoutCode: string | undefined;
+    try {
+      const body = await response.clone().json();
+      forceLogoutCode =
+        body?.error?.code ??
+        (typeof body?.detail === "object" ? body?.detail?.code : undefined);
+    } catch {
+      // ignore parse errors
+    }
+
+    if (
+      forceLogoutCode === "PRIVILEGES_CHANGED" ||
+      forceLogoutCode === "ACCOUNT_INACTIVE"
+    ) {
+      auth.clearSession();
+      setCsrfToken(null);
+      redirectToLogin();
+      throw new ApiError(
+        forceLogoutCode === "PRIVILEGES_CHANGED"
+          ? "Your access level changed. Please sign in again."
+          : "Account is inactive. Please sign in again.",
+        401,
+        { code: forceLogoutCode },
+      );
+    }
+
     const refreshed = await tryRefresh();
     if (refreshed) {
       return apiFetch(pathOrUrl, init, { skipAuthRetry: true });
     }
     auth.clearSession();
+    setCsrfToken(null);
     redirectToLogin();
     throw new ApiError("Unauthorized", 401, { code: "UNAUTHORIZED" });
   }

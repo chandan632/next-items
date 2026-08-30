@@ -54,4 +54,9 @@ describe("parseQueryParams", () => {
     const query = parseQueryParams(new URLSearchParams());
     expect(query).toMatchObject(QUERY_DEFAULTS);
   });
+
+  it("parses cursor from the URL", () => {
+    const query = parseQueryParams(new URLSearchParams("cursor=abc123"));
+    expect(query.cursor).toBe("abc123");
+  });
 });

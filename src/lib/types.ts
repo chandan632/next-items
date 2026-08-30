@@ -14,13 +14,25 @@ export type AuthUser = {
   id: string;
   email: string;
   role: UserRole;
+  is_active: boolean;
   created_at: string;
+};
+
+export type AdminUserCreate = {
+  email: string;
+  role: UserRole;
+};
+
+export type UserAdminUpdate = {
+  role?: UserRole;
+  is_active?: boolean;
 };
 
 export type TokenResponse = {
   access_token: string;
   token_type: string;
   user: AuthUser;
+  csrf_token?: string | null;
 };
 
 export type Item = {

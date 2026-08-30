@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { PAGE_SIZE_OPTIONS } from "@/lib/columns";
 
 type ItemsToolbarProps = {
@@ -57,6 +59,11 @@ export function ItemsToolbar({
               Add item
             </button>
           )}
+          {canAdmin && (
+            <Link className="btn" href="/admin/users">
+              Users
+            </Link>
+          )}
           {canAdmin && onSeed && (
             <button type="button" className="btn" onClick={onSeed}>
               Seed
@@ -76,6 +83,9 @@ export function ItemsToolbar({
           <button type="button" className="btn" onClick={onToggleColumns}>
             Columns
           </button>
+          <Link className="btn" href="/account/change-password">
+            Change password
+          </Link>
           <button type="button" className="btn" onClick={onLogout}>
             Log out
           </button>

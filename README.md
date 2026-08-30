@@ -6,12 +6,12 @@ Next.js inventory UI for the [`pymongo-items`](../pymongo-items) FastAPI backend
 
 | Area | Implementation |
 |------|----------------|
-| Auth | Login / logout / refresh; access token in memory; HttpOnly refresh + CSRF cookies from API |
-| Roles | `viewer` (read/export), `editor` (mutations), `admin` (seed when API allows) |
-| Table | Server-driven list: search, filters, sort, pagination (10 / 50 / 100 / 500) |
-| UX | Column hide/reorder, row virtualization, URL-synced state, toasts, empty/error states |
+| Auth | Login / logout / refresh; access token in memory; CSRF from API body + `sessionStorage`; admin **Users** at `/admin/users`; change password at `/account/change-password` |
+| Roles | `viewer` (read/export), `editor` (mutations), `admin` (seed + user admin) |
+| Table | Server-driven list: search, filters, sort, **cursor** pagination (10 / 50 / 100 / 500) |
+| UX | Column hide/reorder, row virtualization, URL-synced state, toasts, password show/hide |
 | Actions | Create / edit / archive / delete; multi-select and bulk; CSV export |
-| Security | Session flag cookie + Next middleware gate; CSP / clickjacking headers; HSTS in production |
+| Security | Session flag cookie + Next middleware; forced logout on `PRIVILEGES_CHANGED` / `ACCOUNT_INACTIVE`; CSP / clickjacking headers |
 | Quality | ESLint, Prettier, TypeScript, Vitest, Playwright, pre-commit, GitHub Actions CI |
 
 ## Stack
@@ -31,13 +31,18 @@ next-items/
 ├── playwright.config.ts
 ├── e2e/
 ├── src/
-│   ├── app/                # /, /login, error / loading
+│   ├── app/
+│   │   ├── page.tsx                 # items table
+│   │   ├── login/
+│   │   ├── account/change-password/ # any logged-in user
+│   │   └── admin/users/             # admin only
 │   ├── components/
-│   │   ├── items/          # table, toolbar, filters, bulk
-│   │   └── ui/
+│   │   ├── items/
+│   │   ├── users/
+│   │   └── ui/                      # Modal, PasswordInput, …
 │   ├── contexts/
-│   ├── hooks/
-│   ├── lib/                # API client, env, types, columns
+│   ├── hooks/                       # useCursorPagination, useRequireAdmin, …
+│   ├── lib/                         # API client, env, types, columns
 │   └── middleware.ts
 ├── vitest.config.mts
 └── .env.example
@@ -59,7 +64,13 @@ npm run dev
 npx pre-commit install   # optional
 ```
 
-App: http://localhost:3000 — login `admin@example.com` / `AdminPass123` (or the admin you created on the API)
+| URL | Purpose |
+|-----|---------|
+| http://localhost:3000 | Items table — login `admin@example.com` / `AdminPass123` |
+| http://localhost:3000/admin/users | User management (admin only) |
+| http://localhost:3000/account/change-password | Change password (all roles) |
+
+Admin-created users use `DEFAULT_USER_PASSWORD` / `NEXT_PUBLIC_DEFAULT_USER_PASSWORD` (must match) until they change it.
 
 ## Environment
 
@@ -72,21 +83,25 @@ App: http://localhost:3000 — login `admin@example.com` / `AdminPass123` (or th
 | `NEXT_PUBLIC_CSRF_COOKIE_NAME` | `csrf_token` | Must match backend |
 | `NEXT_PUBLIC_CSRF_HEADER_NAME` | `X-CSRF-Token` | Must match backend |
 | `NEXT_PUBLIC_SESSION_COOKIE_NAME` | `items_session` | Route middleware session flag |
+| `NEXT_PUBLIC_DEFAULT_USER_PASSWORD` | `password` | UI copy for create/reset; must match backend |
 
 `NEXT_PUBLIC_API_URL` is required in production builds.
 
 ## Auth flow
 
-1. `/login` → `POST /api/v1/auth/login`
-2. Access token held in memory; refresh cookie set by API
-3. Client sends Bearer + CSRF on mutating calls; one refresh retry on 401
-4. Logout clears local session and calls `POST /api/v1/auth/logout`
+1. `/login` → `POST /api/v1/auth/login` (stores access token + `csrf_token` from JSON; refresh cookie from API)
+2. Access token in memory; CSRF also kept in `sessionStorage` so hard reloads can refresh
+3. Mutating calls send Bearer + CSRF; single-flight refresh on 401
+4. `PRIVILEGES_CHANGED` / `ACCOUNT_INACTIVE` → clear session and redirect to login (no refresh retry)
+5. Logout / successful password change clears client session and cookies
 
 ## URL state
 
 Synced query params: `cursor`, `page_size`, `sort_by`, `sort_order`, `q`, `category`, `status`, `min_price`, `max_price`, `min_quantity`, `max_quantity`.
 
 Example: `/?q=lamp&status=active&sort_by=price&sort_order=asc&cursor=...`
+
+Pager is previous/next via cursor stack (not page numbers).
 
 ## Scripts
 

@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError } from "@/lib/api";
 import { getAppName } from "@/lib/env";
@@ -60,14 +61,12 @@ export default function LoginPage() {
         </label>
         <label htmlFor="login-password">
           Password
-          <input
+          <PasswordInput
             id="login-password"
-            className="input"
-            type="password"
             name="password"
             autoComplete="current-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             required
             minLength={8}
           />

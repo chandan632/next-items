@@ -10,7 +10,15 @@ export {
   logout,
   refreshSession,
   fetchMe,
+  changePassword,
 } from "./api/auth";
+export {
+  fetchUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  resetUserPassword,
+} from "./api/users";
 export {
   fetchItems,
   createItem,

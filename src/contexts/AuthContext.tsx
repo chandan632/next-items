@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { bindAuth } from "@/lib/api/client";
+import { ApiError, bindAuth } from "@/lib/api/client";
 import { login as apiLogin, logout as apiLogout, refreshSession } from "@/lib/api/auth";
 import { clearSessionFlagCookie, setSessionFlagCookie } from "@/lib/sessionCookie";
 import type { AuthUser } from "@/lib/types";
@@ -37,23 +37,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const tokenRef = useRef<string | null>(null);
   tokenRef.current = accessToken;
 
-  const setSession = useCallback((token: string, nextUser: AuthUser) => {
-    tokenRef.current = token;
-    setAccessToken(token);
-    setUser(nextUser);
-    setSessionFlagCookie();
-  }, []);
+  const csrfRef = useRef<string | null>(null);
+
+  const setSession = useCallback(
+    (token: string, nextUser: AuthUser, csrfToken?: string | null) => {
+      tokenRef.current = token;
+      if (csrfToken) csrfRef.current = csrfToken;
+      setAccessToken(token);
+      setUser(nextUser);
+      setSessionFlagCookie();
+    },
+    [],
+  );
 
   const clearSession = useCallback(() => {
     tokenRef.current = null;
+    csrfRef.current = null;
     setAccessToken(null);
     setUser(null);
     clearSessionFlagCookie();
+    try {
+      sessionStorage.removeItem("items_csrf_token");
+    } catch {
+      // ignore
+    }
   }, []);
 
   useEffect(() => {
     bindAuth({
       getAccessToken: () => tokenRef.current,
+      getCsrfToken: () => csrfRef.current,
       setSession,
       clearSession,
     });
@@ -70,9 +83,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const data = await refreshSession();
         if (cancelled) return;
-        setSession(data.access_token, data.user);
-      } catch {
-        if (!cancelled) clearSession();
+        setSession(data.access_token, data.user, data.csrf_token ?? null);
+      } catch (err) {
+        if (!cancelled && err instanceof ApiError && err.status === 401) {
+          clearSession();
+        }
       } finally {
         window.clearTimeout(timer);
         if (!cancelled) setLoading(false);
@@ -88,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (email: string, password: string) => {
       const data = await apiLogin(email, password);
-      setSession(data.access_token, data.user);
+      setSession(data.access_token, data.user, data.csrf_token ?? null);
     },
     [setSession],
   );

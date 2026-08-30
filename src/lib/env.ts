@@ -50,3 +50,8 @@ export function getCsrfHeaderName(): string {
 export function getSessionCookieName(): string {
   return requirePublic("NEXT_PUBLIC_SESSION_COOKIE_NAME", "items_session");
 }
+
+/** Must match backend DEFAULT_USER_PASSWORD (display / confirm copy only). */
+export function getDefaultUserPassword(): string {
+  return requirePublic("NEXT_PUBLIC_DEFAULT_USER_PASSWORD", "password");
+}

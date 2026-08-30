@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
   const isLogin = pathname === LOGIN_PATH || pathname.startsWith(`${LOGIN_PATH}/`);
   const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value);
 
-  if (!hasSession && !isLogin && pathname === "/") {
+  if (!hasSession && !isLogin && (pathname === "/" || pathname.startsWith("/admin/") || pathname.startsWith("/account/"))) {
     const url = request.nextUrl.clone();
     url.pathname = LOGIN_PATH;
     return NextResponse.redirect(url);
@@ -26,5 +26,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login"],
+  matcher: ["/", "/login", "/admin/users", "/account/change-password"],
 };

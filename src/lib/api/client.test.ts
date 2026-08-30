@@ -1,6 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { buildQueryString } from "@/lib/api/client";
+import {
+  apiRequest,
+  bindAuth,
+  buildQueryString,
+} from "@/lib/api/client";
 import { exportUrl } from "@/lib/api/items";
 import { QUERY_DEFAULTS } from "@/lib/queryParams";
 
@@ -65,4 +69,60 @@ describe("exportUrl", () => {
     expect(qs.get("select_all")).toBe("false");
     expect(qs.get("ids")).toBe("a,b");
   });
+});
+
+describe("apiRequest force logout", () => {
+  const clearSession = vi.fn();
+  const assign = vi.fn();
+
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+    clearSession.mockReset();
+    assign.mockReset();
+    bindAuth({
+      getAccessToken: () => "stale-token",
+      getCsrfToken: () => null,
+      setSession: () => {},
+      clearSession,
+    });
+    vi.stubGlobal("fetch", vi.fn());
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { pathname: "/", assign },
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it.each([
+    ["PRIVILEGES_CHANGED", "Your access level changed. Please sign in again."],
+    ["ACCOUNT_INACTIVE", "Account is inactive. Please sign in again."],
+  ] as const)(
+    "clears session and redirects on %s without refresh retry",
+    async (code, message) => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock.mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            success: false,
+            error: { code, message },
+          }),
+          { status: 401, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+
+      await expect(apiRequest("/items/")).rejects.toMatchObject({
+        message,
+        status: 401,
+        code,
+      });
+
+      expect(clearSession).toHaveBeenCalledTimes(1);
+      expect(assign).toHaveBeenCalledWith("/login");
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    },
+  );
 });
